@@ -28,12 +28,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@695%m6y@w85&zq4aq6q=v=2!5r+&zro5_rb6ss^)-z#xv3$cb'
+#SECRET_KEY = 'django-insecure-@695%m6y@w85&zq4aq6q=v=2!5r+&zro5_rb6ss^)-z#xv3$cb'
+# se lee de .env (local) o del panel de Render (producción)
+SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# default=False: si falta la variable, queda apagado (lo seguro); cast=bool convierte "True"/"False" en booleano
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# dominios permitidos, separados por comas en la variable
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 
 # Application definition
@@ -154,9 +157,23 @@ MAILERS = {
     },
 }
 
-# STORAGES: le dice a Django que use whitenoise para comprimir y versionar esos archivos
+# STATIC_URL: ya existía — la dirección web donde se publican los estáticos (ej. /static/admin/css/base.css)
+STATIC_URL = 'static/'
+
+# STATIC_ROOT: NUEVO — carpeta "staticfiles" donde collectstatic junta TODOS los CSS/JS/imágenes del proyecto
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# STORAGES: NUEVO — le dice a Django cómo guardar archivos
 STORAGES = {
+    # "default": archivos que suban los usuarios; se deja el sistema normal de Django (obligatorio declararlo)
+    "default": {
+        # FileSystemStorage: guarda en disco, igual que antes de este cambio
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    # cierre de la config de "default"
+    },
+    # "staticfiles": tus CSS/JS/imágenes; whitenoise los comprime y les pone una "huella" en el nombre
     "staticfiles": {
+        # CompressedManifestStaticFilesStorage: el almacenamiento optimizado que trae whitenoise
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     # cierre de la config de "staticfiles"
     },
